@@ -36,7 +36,7 @@ vasd_is_allocated (VOID * va)
 }
 
 VOID *
-vasd_get_virtual (VAS * vas, int i)
+vasd_get_virtual (VASD * vas, int i)
 {
 	return &vas->va [i * 20];
 }
@@ -48,7 +48,7 @@ vasd_alloc (VOID * va)
 }
 
 VASD_E *
-vasd_e_alloc (VAS * vas, int i)
+vasd_e_alloc (VASD * vas, int i)
 {
 	if (vasd_is_allocated (vasd_get_virtual (vas, i)) == 0) {
 		if (vasd_alloc (vasd_get_virtual (vas, i)) == FALSE)
@@ -59,7 +59,7 @@ vasd_e_alloc (VAS * vas, int i)
 }
 
 void
-vasd_e_free (VAS * vas, int i)
+vasd_e_free (VASD * vas, int i)
 {
 	VASD_E * e;
 	
@@ -100,7 +100,7 @@ vasd_d_alloc ()
 }
 
 void
-vasd_d_append (VAS * vas, VASD_D * d, VASD_VALUE data)
+vasd_d_append (VASD * vas, VASD_D * d, VASD_VALUE data)
 {
 	d->n++;
 	d->datas = (VASD_VALUE *)realloc (d->datas, (d->n * sizeof (VASD_VALUE)));
@@ -112,7 +112,7 @@ vasd_d_append (VAS * vas, VASD_D * d, VASD_VALUE data)
 }
 
 BOOL
-vasd_e_append (VAS * vas, VASD_E * e, VASD_KEY * key, VASD_VALUE data)
+vasd_e_append (VASD * vas, VASD_E * e, VASD_KEY * key, VASD_VALUE data)
 {
 	VASD_C * c;
 	int i;
@@ -142,7 +142,7 @@ vasd_e_append (VAS * vas, VASD_E * e, VASD_KEY * key, VASD_VALUE data)
 		
 	c = vasd_c_alloc ();
 	if (c == NULL) {
-		fprintf (stderr, "VASD_c_alloc failed...\n");
+		fprintf (stderr, "vasd_c_alloc failed...\n");
 		return FALSE;
 	}
 
@@ -177,8 +177,16 @@ vasd_key_cmp (VASD_KEY * k0, VASD_KEY * k1)
 	return FALSE;
 }
 
+void
+vasd_d_free (VASD_D * d)
+{
+	free (d->datas);
+	free (d);
+	return;
+}
+
 BOOL
-vasd_e_remove (VAS * vas, VASD_E * e, VASD_KEY * key)
+vasd_e_remove (VASD * vas, VASD_E * e, VASD_KEY * key)
 {
 	VASD_C * c;
 	int i;
@@ -188,6 +196,9 @@ vasd_e_remove (VAS * vas, VASD_E * e, VASD_KEY * key)
 
 	for (i = 0; i < e->n; i++) {
 		if (vasd_key_cmp (e->collides [i]->key, key)) {
+			vasd_d_free (&e->collides [i]->datas);
+			vasd_c_free (e->collides [i]);
+
 			memmove (&e->collides [i], e->collides [i +1], (e->n -i -1) * sizeof (VASD_C *));
 			e->n--;
 			e->collides = (VASD_C **)realloc (e->collides, e->n * sizeof (VASD_C *));
@@ -199,7 +210,7 @@ vasd_e_remove (VAS * vas, VASD_E * e, VASD_KEY * key)
 }
 
 VASD_D *
-vasd_e_get (VAS * vas, VASD_E * e, VASD_KEY * key)
+vasd_e_get (VASD * vas, VASD_E * e, VASD_KEY * key)
 {
 	VASD_C * c;
 	int i;
@@ -217,7 +228,7 @@ vasd_e_get (VAS * vas, VASD_E * e, VASD_KEY * key)
 }
 
 BOOL
-vasd_e_replace (VAS * vas, VASD_E * e, VASD_KEY * key, VASD_VALUE data, VASD_VALUE newdata)
+vasd_e_replace (VASD * vas, VASD_E * e, VASD_KEY * key, VASD_VALUE data, VASD_VALUE newdata)
 {
 	VASD_C * c;
 	int i, j;
@@ -240,7 +251,7 @@ vasd_e_replace (VAS * vas, VASD_E * e, VASD_KEY * key, VASD_VALUE data, VASD_VAL
 }
 
 BOOL
-vasd_init (VAS * vas, long long int n)
+vasd_init (VASD * vas, long long int n)
 {
 	VOID * va;
 	
@@ -253,18 +264,18 @@ vasd_init (VAS * vas, long long int n)
 	return TRUE;
 }
 
-VAS *
+VASD *
 vasd_alloc (long long int N)
 {
-	VAS * vas;
+	VASD * vas;
 	
-	vas = (VAS *)calloc (1, sizeof (VAS));
+	vas = (VASD *)calloc (1, sizeof (VASD));
 	vasd_init (vas, N);
 	return vas;
 }
 
 void
-vasd_free (VAS * vas)
+vasd_free (VASD * vas)
 {
 	int i;
 	
@@ -277,13 +288,13 @@ vasd_free (VAS * vas)
 }
 
 long long int
-vasd_hash_ll (VAS * vas, long long i)
+vasd_hash_ll (VASD * vas, long long i)
 {
 	return ((i % vas->n) * 20);
 }
 
 long long int
-vasd_hash_str (VAS * vas, char * str)
+vasd_hash_str (VASD * vas, char * str)
 {
 	long long int hash;
 	
@@ -298,7 +309,7 @@ vasd_hash_str (VAS * vas, char * str)
 }
 
 long long int
-vasd_hash_voidptr (VAS * vas, CHAR * ptr, int len)
+vasd_hash_voidptr (VASD * vas, CHAR * ptr, int len)
 {
 	long long int hash;
 	int i;
@@ -314,7 +325,7 @@ vasd_hash_voidptr (VAS * vas, CHAR * ptr, int len)
 }
 
 long long int
-vasd_hash (VAS * vas, VASD_KEY * key)
+vasd_hash (VASD * vas, VASD_KEY * key)
 {
 	switch (key->dt) {
 		case VASD_DT_STR:
@@ -337,7 +348,7 @@ vasd_hash (VAS * vas, VASD_KEY * key)
 }
 
 BOOL
-vasd_insert (VAS * vas, VASD_KEY * key, VASD_VALUE data)
+vasd_insert (VASD * vas, VASD_KEY * key, VASD_VALUE data)
 {
 	long long int va;
 	VASD_E * e;
@@ -348,7 +359,7 @@ vasd_insert (VAS * vas, VASD_KEY * key, VASD_VALUE data)
 }
 
 BOOL
-vasd_remove (VAS * vas, VASD_KEY * key)
+vasd_remove (VASD * vas, VASD_KEY * key)
 {
 	long long int va;
 	VASD_E * e;
@@ -359,7 +370,7 @@ vasd_remove (VAS * vas, VASD_KEY * key)
 }
 
 VASD_D *
-vasd_get (VAS * vas, VASD_KEY * key)
+vasd_get (VASD * vas, VASD_KEY * key)
 {
 	long long int va;
 	VASD_E * e;
@@ -370,7 +381,7 @@ vasd_get (VAS * vas, VASD_KEY * key)
 }
 
 BOOL
-vasd_replace (VAS * vas, VASD_KEY * key, VASD_VALUE data, VASD_VALUE newdata)
+vasd_replace (VASD * vas, VASD_KEY * key, VASD_VALUE data, VASD_VALUE newdata)
 {
 	long long int va;
 	VASD_E * e;
@@ -378,4 +389,30 @@ vasd_replace (VAS * vas, VASD_KEY * key, VASD_VALUE data, VASD_VALUE newdata)
 	va = vasd_hash (vas, key);
 	e = (VASD_E *)(va + (long long int)vas->va);
 	return vasd_e_replace (vas, e, key, data, newdata);
+}
+
+BOOL
+vasd_removeVal (VASD * vas, VASD_KEY * key, VASD_VALUE data)
+{
+	long long int va;
+	VASD_E * e;
+	VASD_D * d;
+	int i;
+
+	va = vasd_hash (vas, key);
+	e = (VASD_E *)(va + (long long int)vas->va);
+	d = vasd_e_get (vas, e, key);
+	if (d == NULL)
+		return FALSE;
+
+	for (i = 0; i < d->n; i++) {
+		if (memcmp ((void *)&d->datas [i], (void *)&data, sizeof (VASD_VALUE)) == 0) {
+			memmove ((void *)&d->datas [i], (void *)&d->datas [i +1], (d->n -i -1) * sizeof (VASD_VALUE));
+			d->n--;
+			d->datas = (VASD_VALUE *)realloc (d->datas, d->n * sizeof (VASD_VALUE));
+			return TRUE;
+		}
+	}
+
+	return FALSE;
 }

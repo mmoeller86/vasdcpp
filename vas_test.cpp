@@ -3,7 +3,7 @@
 
 int main (int c, char ** args)
 {
-	VAS vas;
+	VASD vas;
 	long long int val;
 	VASD_VALUE value;
 	VASD_VALUE newvalue;

@@ -52,15 +52,16 @@ typedef struct {
 typedef struct {
 	char *		va;
 	long long int n;
-} VAS;
+} VASD;
 
-VAS *		vasd_alloc (long long int N);
-BOOL		vasd_init (VAS * vas, long long int n);
-void		vasd_free (VAS * vas);
-BOOL		vasd_insert (VAS * vas, VASD_KEY * key, VASD_VALUE data);
-BOOL		vasd_remove (VAS * vas, VASD_KEY * key);
-BOOL		vasd_replace (VAS * vas, VASD_KEY * key, VASD_VALUE data, VASD_VALUE newdata);
-VASD_D *	vasd_get (VAS * vas, VASD_KEY * key);
+VASD *		vasd_alloc (long long int N);
+BOOL		vasd_init (VASD * vas, long long int n);
+void		vasd_free (VASD * vas);
+BOOL		vasd_insert (VASD * vas, VASD_KEY * key, VASD_VALUE data);
+BOOL		vasd_remove (VASD * vas, VASD_KEY * key);
+BOOL		vasd_removeVal (VASD * vas, VASD_KEY * key, VASD_VALUE data);
+BOOL		vasd_replace (VASD * vas, VASD_KEY * key, VASD_VALUE data, VASD_VALUE newdata);
+VASD_D *	vasd_get (VASD * vas, VASD_KEY * key);
 
 BOOL		vasd_is_allocated (long long int va);
-VOID *		vasd_get_virtual (VAS * vas, int i);
+VOID *		vasd_get_virtual (VASD * vas, int i);
